@@ -308,9 +308,11 @@
         <div class="brand">Note Holder MD</div>
         <div class="actions">
             <button onclick="createNewNote()" class="primary">New</button>
+            <button onclick="triggerOpen()" class="primary">Open</button>
             <button onclick="exportNotes()">Export</button>
             <button onclick="triggerImport()">Import</button>
             <input type="file" id="import-file" accept=".json" onchange="importNotes(event)">
+            <input type="file" id="open-file" accept=".txt,.md,.log" style="display: none;" onchange="openNote(event)">
             <button onclick="toggleTheme()" id="theme-toggle">🌙</button>
         </div>
     </header>
@@ -400,6 +402,33 @@
         notes.push(newNote);
         selectNote(newNote.id);
         renderSidebar();
+    }
+
+    function triggerOpen() {
+        document.getElementById('open-file').click();
+    }
+
+    function openNote(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const title = file.name.replace(/\.[^/.]+$/, "");
+            
+            const newNote = {
+                id: Date.now().toString(),
+                title: title,
+                content: content
+            };
+            
+            notes.push(newNote);
+            selectNote(newNote.id);
+            renderSidebar();
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
 
     function copyToClipboard(event) {
