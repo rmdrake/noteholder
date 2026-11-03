@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note Holder MD</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f5f5f5;
+            --text-color: #333333;
+            --border-color: #dddddd;
+            --accent-color: #0078d4;
+            --hover-color: #e0e0e0;
+            --header-bg: #f0f0f0;
+            --editor-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --sidebar-bg: #252526;
+            --text-color: #d4d4d4;
+            --border-color: #3c3c3c;
+            --accent-color: #007acc;
+            --hover-color: #37373d;
+            --header-bg: #333333;
+            --editor-bg: #1e1e1e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            height: 50px;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .brand {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            padding: 4px 12px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background-color: var(--hover-color);
+        }
+
+        button.primary {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        aside {
+            min-width: 150px;
+            max-width: 500px;
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .resizer {
+            width: 4px;
+            cursor: col-resize;
+            background-color: var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .resizer:hover, .resizer.active {
+            background-color: var(--accent-color);
+        }
+
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--hover-color);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* Workspace */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--editor-bg);
+            overflow: hidden;
+        }
+
+        #editor-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        #note-title {
+            flex: 1;
+            padding: 5px;
+            font-size: 1.2rem;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        #note-title:focus {
+            outline: none;
+            border-color: var(--border-color);
+        }
+
+        .editor-body-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #note-content, #markdown-preview {
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        #note-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            resize: none;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            outline: none;
+            padding-left: 15px;
+        }
+
+        #markdown-preview {
+            border-left: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+        }
+
+        /* Markdown Styling */
+        .markdown-body {
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow: auto;
+        }
+        [data-theme="dark"] .markdown-body pre {
+            background-color: #161b22;
+        }
+        .markdown-body code {
+            background-color: rgba(175, 184, 193, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-size: 85%;
+        }
+        .markdown-body blockquote {
+            border-left: 4px solid var(--border-color);
+            color: #8b949e;
+            padding: 0 1em;
+            margin-left: 0;
+        }
+        .markdown-body img {
+            max-width: 100%;
+        }
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid var(--border-color);
+            padding: 6px 13px;
+        }
+        .markdown-body tr:nth-child(even) {
+            background-color: var(--sidebar-bg);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--sidebar-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color);
+        }
+
+        /* Firefox support */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--sidebar-bg);
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #import-file {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="brand">Note Holder MD</div>
+        <div class="actions">
+            <button onclick="createNewNote()" class="primary">New</button>
+            <button onclick="exportNotes()">Export</button>
+            <button onclick="triggerImport()">Import</button>
+            <input type="file" id="import-file" accept=".json" onchange="importNotes(event)">
+            <button onclick="toggleTheme()" id="theme-toggle">🌙</button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <aside>
+            <div class="sidebar-list" id="sidebar-list">
+                <!-- Notes will appear here -->
+            </div>
+        </aside>
+        <div id="resizer" class="resizer"></div>
+        <main>
+            <div id="editor-view" class="hidden">
+                <div class="editor-header">
+                    <input type="text" id="note-title" placeholder="Note Title" spellcheck="true">
+                    <button onclick="copyToClipboard(event)" style="color: var(--accent-color);">Copy</button>
+                    <button onclick="saveNoteAsMarkdown()" style="color: var(--accent-color);">Save</button>
+                    <button onclick="deleteCurrentNote()" style="color: #d93025;">Delete</button>
+                </div>
+                <div class="editor-body-container">
+                    <div class="editor-container">
+                        <textarea id="note-content" placeholder="Start writing..." spellcheck="true"></textarea>
+                        <div id="markdown-preview" class="markdown-body"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="empty-view" class="empty-state">
+                Select a note or create a new one
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    // State
+    let notes = [];
+    let selectedNoteId = null;
+    let currentTheme = 'dark';
+
+    // DOM Elements
+    const sidebarList = document.getElementById('sidebar-list');
+    const editorView = document.getElementById('editor-view');
+    const emptyView = document.getElementById('empty-view');
+    const titleInput = document.getElementById('note-title');
+    const contentInput = document.getElementById('note-content');
+    const previewDiv = document.getElementById('markdown-preview');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const resizer = document.getElementById('resizer');
+    const sidebar = document.querySelector('aside');
+
+    // --- Resizable Sidebar Logic ---
+
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.body.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = e.clientX;
+        if (newWidth > 150 && newWidth < 500) {
+            sidebar.style.width = `${newWidth}px`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isResizing = false;
+        document.body.classList.remove('resizing');
+        document.body.style.cursor = '';
+    });
+
+    // Initialize
+    function init() {}
+
+    // --- Note Operations ---
+
+    function createNewNote() {
+        const newNote = {
+            id: Date.now().toString(),
+            title: 'Untitled Note',
+            content: ''
+        };
+        notes.push(newNote);
+        selectNote(newNote.id);
+        renderSidebar();
+    }
+
+    function copyToClipboard(event) {
+        const content = contentInput.value;
+        if (!content) return;
+        navigator.clipboard.writeText(content).then(() => {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+
+    function saveNoteAsMarkdown() {
+        const title = titleInput.value || 'Untitled Note';
+        const content = contentInput.value;
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const filename = title.replace(/[\\/:"*?<>|]/g, '_') + '.md';
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function selectNote(id) {
+        selectedNoteId = id;
+        const note = notes.find(n => n.id === id);
+        
+        if (note) {
+            editorView.classList.remove('hidden');
+            emptyView.classList.add('hidden');
+            titleInput.value = note.title;
+            contentInput.value = note.content;
+            updatePreview();
+        } else {
+            editorView.classList.add('hidden');
+            emptyView.classList.remove('hidden');
+        }
+        renderSidebar();
+    }
+
+    function deleteCurrentNote() {
+        if (!selectedNoteId) return;
+        if (confirm('Are you sure you want to delete this note?')) {
+            notes = notes.filter(n => n.id !== selectedNoteId);
+            selectedNoteId = null;
+            editorView.classList.add('hidden');
+            emptyView.classList.remove('hidden');
+            renderSidebar();
+        }
+    }
+
+    // --- Rendering ---
+
+    function renderSidebar() {
+        sidebarList.innerHTML = '';
+        const sortedNotes = [...notes].sort((a, b) => 
+            a.title.localeCompare(b.title)
+        );
+
+        sortedNotes.forEach(note => {
+            const item = document.createElement('div');
+            item.className = `sidebar-item ${note.id === selectedNoteId ? 'active' : ''}`;
+            item.textContent = note.title || 'Untitled Note';
+            item.onclick = () => selectNote(note.id);
+            sidebarList.appendChild(item);
+        });
+    }
+
+    function updatePreview() {
+        if (previewDiv) {
+            previewDiv.innerHTML = marked.parse(contentInput.value);
+        }
+    }
+
+    // --- Input Handlers ---
+
+    titleInput.addEventListener('blur', () => {
+        const note = notes.find(n => n.id === selectedNoteId);
+        if (note) {
+            note.title = titleInput.value || 'Untitled Note';
+            renderSidebar();
+        }
+    });
+
+    contentInput.addEventListener('input', () => {
+        const note = notes.find(n => n.id === selectedNoteId);
+        if (note) {
+            note.content = contentInput.value;
+            updatePreview();
+        }
+    });
+
+    // --- Data Portability ---
+
+    function exportNotes() {
+        if (notes.length === 0) {
+            alert('No notes to export.');
+            return;
+        }
+        const dataStr = JSON.stringify(notes, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `noteholdermd_export.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function triggerImport() {
+        document.getElementById('import-file').click();
+    }
+
+    function importNotes(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedNotes = JSON.parse(e.target.result);
+                if (!Array.isArray(importedNotes)) {
+                    throw new Error('Invalid format: Expected an array of notes.');
+                }
+
+                let addedCount = 0;
+                importedNotes.forEach(impNote => {
+                    const duplicate = notes.some(n => n.title === impNote.title);
+                    if (!duplicate && impNote.title) {
+                        const newNote = {
+                            ...impNote,
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+                        };
+                        notes.push(newNote);
+                        addedCount++;
+                    }
+                });
+
+                alert(`Import complete. Added ${addedCount} new unique notes.`);
+                renderSidebar();
+            } catch (err) {
+                alert('Error importing file: ' + err.message);
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    // --- Theme Management ---
+
+    function toggleTheme() {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggleBtn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+    }
+
+    // Initialization
+    init();
+
+</script>
+</body>
+</html>
