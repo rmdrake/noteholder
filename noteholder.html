@@ -584,20 +584,15 @@
 
                 let addedCount = 0;
                 importedNotes.forEach(impNote => {
-                    // Check for collisions based on title
-                    const duplicate = notes.some(n => n.title === impNote.title);
-                    if (!duplicate && impNote.title) {
-                        // Ensure we create a fresh ID to avoid collisions if same ID exists
-                        const newNote = {
-                            ...impNote,
-                            id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
-                        };
-                        notes.push(newNote);
+                    // Check for collisions based on id
+                    const duplicate = notes.some(n => n.id === impNote.id);
+                    if (!duplicate) {
+                        notes.push(impNote);
                         addedCount++;
                     }
                 });
 
-                alert(`Import complete. Added ${addedCount} new unique notes.`);
+                alert(`Import complete. Added ${addedCount} notes.`);
                 renderSidebar();
             } catch (err) {
                 alert('Error importing file: ' + err.message);
