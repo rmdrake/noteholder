@@ -343,6 +343,25 @@
         #import-file {
             display: none;
         }
+
+        .sidebar-search {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #sidebar-search {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            outline: none;
+        }
+
+        #sidebar-search:focus {
+            border-color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -369,6 +388,9 @@
 
     <div class="main-content">
         <aside>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search" placeholder="Search notes..." oninput="filterNotes()">
+            </div>
             <div class="sidebar-list" id="sidebar-list">
                 <!-- Notes will appear here -->
             </div>
@@ -402,6 +424,7 @@
     let notes = [];
     let selectedNoteId = null;
     let currentTheme = 'dark';
+    let sidebarSearchQuery = '';
 
     // DOM Elements
     const sidebarList = document.getElementById('sidebar-list');
@@ -560,17 +583,27 @@
 
     function renderSidebar() {
         sidebarList.innerHTML = '';
+        
+        // Sort notes alphabetically by title
         const sortedNotes = [...notes].sort((a, b) => 
             a.title.localeCompare(b.title)
         );
 
         sortedNotes.forEach(note => {
+            if (sidebarSearchQuery && !note.title.toLowerCase().includes(sidebarSearchQuery.toLowerCase())) {
+                return;
+            }
             const item = document.createElement('div');
             item.className = `sidebar-item ${note.id === selectedNoteId ? 'active' : ''}`;
             item.textContent = note.title || 'Untitled Note';
             item.onclick = () => selectNote(note.id);
             sidebarList.appendChild(item);
         });
+    }
+
+    function filterNotes() {
+        sidebarSearchQuery = document.getElementById('sidebar-search').value;
+        renderSidebar();
     }
 
     function updatePreview() {
