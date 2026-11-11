@@ -186,6 +186,21 @@
             border-left: 4px solid var(--accent-color);
         }
 
+        .search-container {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #sidebar-search {
+            width: 100%;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
         /* Workspace */
         main {
             flex: 1;
@@ -369,6 +384,9 @@
 
     <div class="main-content">
         <aside>
+            <div class="search-container">
+                <input type="text" id="sidebar-search" placeholder="Search notes..." oninput="filterNotes()">
+            </div>
             <div class="sidebar-list" id="sidebar-list">
                 <!-- Notes will appear here -->
             </div>
@@ -558,13 +576,25 @@
 
     // --- Rendering ---
 
+    let searchQuery = '';
+
+    function filterNotes() {
+        searchQuery = document.getElementById('sidebar-search').value.toLowerCase();
+        renderSidebar();
+    }
+
     function renderSidebar() {
         sidebarList.innerHTML = '';
+        
+        // Sort notes alphabetically by title
         const sortedNotes = [...notes].sort((a, b) => 
             a.title.localeCompare(b.title)
         );
 
         sortedNotes.forEach(note => {
+            if (searchQuery && !note.title.toLowerCase().includes(searchQuery)) {
+                return;
+            }
             const item = document.createElement('div');
             item.className = `sidebar-item ${note.id === selectedNoteId ? 'active' : ''}`;
             item.textContent = note.title || 'Untitled Note';
